@@ -119,17 +119,26 @@ def encode_final():
 
         encode_message(ipath, msg, pwd, opath)
         
-        # Format detection
+        # ── DETECT ACTUAL OUTPUT ──
+        # encode_message might force .png or .bmp
+        actual_opath = opath
         if not os.path.exists(opath):
-            bpath = os.path.splitext(opath)[0] + ".bmp"
-            if os.path.exists(bpath): opath = bpath
+            for potential_ext in [".png", ".bmp"]:
+                p = os.path.splitext(opath)[0] + potential_ext
+                if os.path.exists(p):
+                    actual_opath = p
+                    break
+        
+        if not os.path.exists(actual_opath):
+            return jsonify({"error": "Encoding failed to produce file"}), 500
 
-        res = send_file(opath, as_attachment=True, download_name=os.path.basename(opath))
+        res = send_file(actual_opath, as_attachment=True, download_name=os.path.basename(actual_opath))
         
         @res.call_on_close
         def cleanup():
-            import shutil
-            try: os.remove(ipath); os.remove(opath)
+            try: 
+                if os.path.exists(ipath): os.remove(ipath)
+                if os.path.exists(actual_opath): os.remove(actual_opath)
             except: pass
         return res
     except Exception as e:
