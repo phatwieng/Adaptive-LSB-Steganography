@@ -9,26 +9,10 @@ from .ecc import HammingCode
 from .utils import get_seed_from_password
 
 HEADER_BITS = 32
-REDUNDANCY = 3 # Each header bit is stored 3 times
-
-def _header_positions(flat_size, seed):
-    """Deterministic header positioning with Triple Redundancy."""
-    pos = []
-    curr = seed
-    a, c, m = 1664525, 1013904223, 2**32
-    # Use first 2M pixels for header scattering
-    search_space = min(flat_size, 2000000)
-    
-    total_slots = HEADER_BITS * REDUNDANCY
-    while len(pos) < total_slots:
-        curr = (a * curr + c) % m
-        p = curr % search_space
-        if p not in pos: pos.append(p)
-            
-    return np.array(pos, dtype=np.int64)
+REDUNDANCY = 3 
 
 def encode_LSB(image_path, plaintext, password, output_path):
-    """Encodes with a scattered, triple-redundant header for max robustness."""
+    """Encodes with Manual Bit-Packing for absolute cross-platform integrity."""
     temp_bmp = None
     try:
         cipher = SecureAESCipher(password)
@@ -43,8 +27,7 @@ def encode_LSB(image_path, plaintext, password, output_path):
 
             fd, temp_bmp = tempfile.mkstemp(suffix='.bmp')
             os.close(fd)
-            streamer = BmpStreamer(temp_bmp)
-            streamer.create_empty(width, height)
+            streamer = BmpStreamer(temp_bmp); streamer.create_empty(width, height)
             
             chunk_rows = max(1, 256 * 1024 * 1024 // (width * 3))
             with streamer.open(mode='r+') as img_array:
@@ -57,32 +40,30 @@ def encode_LSB(image_path, plaintext, password, output_path):
         streamer = BmpStreamer(temp_bmp)
         with streamer.open(mode='r+') as img_array:
             rows, cols, ch = img_array.shape
-            # 1. Prepare Header Bits with Redundancy
-            h_bits = np.unpackbits(np.array([payload_bit_length], dtype=">u4").view(np.uint8))
-            redundant_h_bits = np.repeat(h_bits, REDUNDANCY)
             
-            # 2. Map to Scattered Positions
-            h_pos = _header_positions(img_array.size, get_seed_from_password(password))
-            for i in range(len(h_pos)):
-                p = h_pos[i]
-                r, cl, cn = (p // ch) // cols, (p // ch) % cols, p % ch
-                img_array[r, cl, cn] = (img_array[r, cl, cn] & 0xFE) | redundant_h_bits[i]
+            # 1. Prepare Header Bits (Manual Big-Endian)
+            h_bits = []
+            for i in range(31, -1, -1):
+                h_bits.append((payload_bit_length >> i) & 1)
             
-            # 3. Adaptive Data (Skipping header slots)
-            AdaptiveLSBCore(password=password).encode(img_array, protected_bytes, forbidden_indices=set(h_pos))
+            # 2. Fixed Header Placement (Majority Vote logic)
+            h_indices = []
+            for i, bit in enumerate(h_bits):
+                for r in range(REDUNDANCY):
+                    idx = i * REDUNDANCY + r
+                    img_array[0, idx, 0] = (img_array[0, idx, 0] & 0xFE) | bit
+                    h_indices.append((0 * cols * ch) + (idx * ch) + 0)
+            
+            # 3. Adaptive Data
+            AdaptiveLSBCore(password=password).encode(img_array, protected_bytes, forbidden_indices=set(h_indices))
             img_array.flush()
 
         # ── FINALIZATION ──
         if output_ext == '.bmp':
             if os.path.exists(output_path): os.remove(output_path)
-            import time
-            for _ in range(5):
-                try: shutil.move(temp_bmp, output_path); break
-                except PermissionError: time.sleep(0.5)
-            else: shutil.move(temp_bmp, output_path)
+            shutil.move(temp_bmp, output_path)
         else:
             with Image.open(temp_bmp) as final_bmp:
-                # Force strictly lossless save with zero compression
                 final_bmp.save(output_path, "PNG", compress_level=0)
 
         log_event("ENCODE", "SUCCESS", f"Stored in {output_path}")

@@ -15,24 +15,19 @@ class BmpStreamer:
             self.row_stride = ((self.width * 3 + 3) // 4) * 4
 
     def create_empty(self, w, h):
-        """Creates a raw 24-bit BMP file skeleton with correct headers."""
+        """Creates a raw 24-bit Top-to-Bottom BMP file skeleton."""
         stride = ((w * 3 + 3) // 4) * 4
+        # Force Top-to-Bottom by using negative height
+        h_top_down = -abs(h)
         img_size = stride * abs(h)
         file_size = 54 + img_size
         
-        # ── FILE HEADER (14 bytes) ──
-        # BM, size, res1, res2, offset
         header = struct.pack('<2sIHHI', b'BM', file_size, 0, 0, 54)
-        
-        # ── INFO HEADER (40 bytes) ──
-        # size, w, h, planes, bit, comp, img_sz, h_res, v_res, clr, imp_clr
-        h_res, v_res = 2835, 2835 # 72 DPI
-        info = struct.pack('<IiiHHIIiiII', 40, w, h, 1, 24, 0, img_size, h_res, v_res, 0, 0)
+        info = struct.pack('<IiiHHIIiiII', 40, w, h_top_down, 1, 24, 0, img_size, 2835, 2835, 0, 0)
         
         with open(self.filepath, 'wb') as f:
             f.write(header)
             f.write(info)
-            # Pre-allocate file size
             f.seek(file_size - 1); f.write(b'\0')
 
     @contextmanager
