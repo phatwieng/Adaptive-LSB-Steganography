@@ -7,7 +7,7 @@ import logging
 # ── METRIC MODULES ──
 from .metrics import calculate_psnr, calculate_mse, calculate_ssim
 from .spatial import analyze_pixel_differences, analyze_spatial_distribution
-from .statistical import analyze_lsb_pairing, analyze_histogram_changes, analyze_correlation, analyze_noise_characteristics, fast_entropy
+from .statistical import analyze_lsb_pairing, rs_analysis, sample_pair_analysis, analyze_histogram_changes, analyze_correlation, analyze_noise_characteristics, fast_entropy
 from .frequency import analyze_frequency_signature
 
 logger = logging.getLogger(__name__)  
