@@ -210,7 +210,7 @@ class UIManager {
         const ctx = document.getElementById('histogram-charts');
         if (!ctx) return;
         
-        ctx.innerHTML = '<h2>Spectral Histogram Analysis</h2><div class="image-grid" id="hist-container"></div>';
+        ctx.innerHTML = '<h2>Spectral Histogram Analysis</h2><div id="hist-container" style="display:flex; flex-direction:column; gap:20px;"></div>';
         const container = document.getElementById('hist-container');
         
         const channels = [
@@ -222,7 +222,8 @@ class UIManager {
         channels.forEach(ch => {
             const chartDiv = document.createElement('div');
             chartDiv.className = 'chart-container';
-            chartDiv.innerHTML = `<h4 style="margin-bottom:10px; color:#aaa; font-size:0.65rem;">${ch.name.toUpperCase()}</h4><canvas id="hist-${ch.id}"></canvas>`;
+            chartDiv.style.height = '180px'; // Fixed height
+            chartDiv.innerHTML = `<h4 style="margin-bottom:10px; color:#aaa; font-size:0.7rem; letter-spacing:0.1em;">${ch.name.toUpperCase()}</h4><canvas id="hist-${ch.id}"></canvas>`;
             container.appendChild(chartDiv);
 
             const config = {
@@ -230,7 +231,7 @@ class UIManager {
                 data: {
                     labels: Array.from({length: 256}, (_, i) => i),
                     datasets: [
-                        { label: 'Original', data: a.histogram_original[ch.id], borderColor: '#444', borderWidth: 1.5, fill: false, pointRadius: 0 },
+                        { label: 'Original', data: a.histogram_original[ch.id], borderColor: '#333', borderWidth: 1, fill: false, pointRadius: 0 },
                         { label: 'Stego', data: a.histogram_stego[ch.id], borderColor: ch.color, borderWidth: 1.5, fill: false, pointRadius: 0 }
                     ]
                 },
@@ -238,8 +239,16 @@ class UIManager {
                     responsive: true, 
                     maintainAspectRatio: false,
                     scales: { 
-                        y: { display: false },
-                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#666', font: { size: 8 } } }
+                        y: { 
+                            display: true, 
+                            grid: { color: 'rgba(255,255,255,0.03)' },
+                            ticks: { display: false } 
+                        },
+                        x: { 
+                            display: true,
+                            grid: { color: 'rgba(255,255,255,0.05)' }, 
+                            ticks: { color: '#555', font: { size: 9 } } 
+                        }
                     }, 
                     plugins: { legend: { display: false } } 
                 }
