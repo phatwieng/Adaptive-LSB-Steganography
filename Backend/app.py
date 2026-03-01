@@ -81,21 +81,17 @@ def upload_chunk():
         idx, total = int(request.form["index"]), int(request.form["total"])
         sid, fname = request.form["sessionId"], secure_filename(request.form["filename"])
         
-        tdir = os.path.join(UPLOAD_FOLDER, sid)
-        os.makedirs(tdir, exist_ok=True)
+        # We append directly to the final file to avoid the massive 'merge' step at the end
+        out_path = os.path.join(UPLOAD_FOLDER, f"{sid}_{fname}")
         
-        with open(os.path.join(tdir, f"chunk_{idx}"), "wb") as f: f.write(chunk.read())
+        # 'ab' mode opens for appending in binary
+        with open(out_path, "ab") as f:
+            f.write(chunk.read())
         
         if idx == total - 1:
-            out_path = os.path.join(UPLOAD_FOLDER, f"{sid}_{fname}")
-            with open(out_path, "wb") as f:
-                for i in range(total):
-                    cp = os.path.join(tdir, f"chunk_{i}")
-                    with open(cp, "rb") as cf: f.write(cf.read())
-                    os.remove(cp)
-            os.rmdir(tdir)
             upload_sessions[sid] = {"path": out_path, "filename": fname}
             return jsonify({"success": True, "complete": True})
+        
         return jsonify({"success": True, "complete": False})
     except Exception as e:
         logger.error(f"Chunk error: {e}")

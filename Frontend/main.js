@@ -87,7 +87,7 @@ async function handleEncode(e) {
         // Step 1: Chunked Upload
         const file = imageInput.files[0];
         const sessionId = Math.random().toString(36).substring(7);
-        const chunkSize = 5 * 1024 * 1024;
+        const chunkSize = 20 * 1024 * 1024; // 20MB Chunks
         const totalChunks = Math.ceil(file.size / chunkSize);
 
         for (let i = 0; i < totalChunks; i++) {
