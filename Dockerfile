@@ -2,13 +2,13 @@
 FROM python:3.11-slim
 
 # ── SYSTEM DEPENDENCIES ──
-RUN apt-get update && apt-get install -y 
-    curl 
-    build-essential 
-    libgl1-mesa-glx 
-    libglib2.0-0 
-    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - 
-    && apt-get install -y nodejs 
+RUN apt-get update && apt-get install -y \
+    curl \
+    build-essential \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -31,7 +31,6 @@ RUN npm run build
 RUN mkdir -p Backend/uploads && chmod 777 Backend/uploads
 
 # ── EXPOSE ──
-# Hugging Face Spaces usually listens on 7860
 EXPOSE 7860
 
 # ── START SCRIPT ──
