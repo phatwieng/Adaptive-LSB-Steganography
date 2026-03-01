@@ -8,9 +8,23 @@ from .ecc import HammingCode
 from .utils import get_seed_from_password
 
 HEADER_BITS = 32
+REDUNDANCY = 3
+
+def _header_positions(flat_size, seed):
+    """Mirror encode LCG logic exactly."""
+    pos = []
+    curr = seed
+    a, c, m = 1664525, 1013904223, 2**32
+    search_space = min(flat_size, 2000000)
+    total_slots = HEADER_BITS * REDUNDANCY
+    while len(pos) < total_slots:
+        curr = (a * curr + c) % m
+        p = curr % search_space
+        if p not in pos: pos.append(p)
+    return np.array(pos, dtype=np.int64)
 
 def decode_LSB(image_path, password):
-    """Full-cycle decoding with Fixed Header extraction."""
+    """Decodes using majority-vote on triple-redundant scattered header."""
     temp_path = None
     try:
         with Image.open(image_path) as img:
@@ -19,7 +33,6 @@ def decode_LSB(image_path, password):
             fd, temp_path = tempfile.mkstemp(suffix='.dat')
             os.close(fd)
             temp_memmap = np.memmap(temp_path, dtype=np.uint8, mode='w+', shape=shape)
-            
             chunk_rows = max(1, 100 * 1024 * 1024 // (width * 3))
             for y in range(0, height, chunk_rows):
                 end_y = min(y + chunk_rows, height)
@@ -27,28 +40,32 @@ def decode_LSB(image_path, password):
             temp_memmap.flush()
 
         img_array = np.memmap(temp_path, dtype=np.uint8, mode='r', shape=shape)
+        seed = get_seed_from_password(password)
+        h_pos = _header_positions(img_array.size, seed)
 
-        # ── FIXED HEADER EXTRACTION ──
-        # Header is in the first 32 pixels of row 0, Red channel (channel 0)
-        h_bits = []
-        for i in range(HEADER_BITS):
-            h_bits.append(img_array[0, i, 0] & 1)
+        # ── ROBUST HEADER EXTRACTION (Majority Vote) ──
+        rows, cols, ch = img_array.shape
+        raw_bits = []
+        for p in h_pos:
+            r, cl, cn = (p // ch) // cols, (p // ch) % cols, p % ch
+            raw_bits.append(img_array[r, cl, cn] & 1)
         
-        payload_bit_length = int(np.packbits(np.array(h_bits, dtype=np.uint8)).view(">u4")[0])
-        log_event("DECODE", "INFO", f"Extracted payload_bit_length: {payload_bit_length}")
+        # Reshape to (32 bits, 3 copies) and take majority vote
+        raw_bits = np.array(raw_bits).reshape(HEADER_BITS, REDUNDANCY)
+        voted_bits = (np.sum(raw_bits, axis=1) > (REDUNDANCY // 2)).astype(np.uint8)
+        
+        payload_bit_length = int(np.packbits(voted_bits).view(">u4")[0])
+        log_event("DECODE", "INFO", f"Robust extraction bit_length: {payload_bit_length}")
         
         if payload_bit_length <= 0 or payload_bit_length > img_array.size:
             return "Error: Invalid payload length or corrupted data."
 
         # ── DATA EXTRACTION ──
-        # Skip the first 32 bits (header zone)
-        protected_bytes = AdaptiveLSBCore(password=password).decode(img_array, payload_bit_length, forbidden_indices=set(range(HEADER_BITS)))
+        protected_bytes = AdaptiveLSBCore(password=password).decode(img_array, payload_bit_length, forbidden_indices=set(h_pos))
         
-        # Exact truncation
+        # Truncate and Decrypt
         bits = np.unpackbits(np.frombuffer(protected_bytes, dtype=np.uint8))[:payload_bit_length]
         protected_bytes_exact = np.packbits(bits).tobytes()
-
-        # AES Decryption
         encrypted_bytes = HammingCode().decode(protected_bytes_exact)
         plaintext = SecureAESCipher(password).decrypt(encrypted_bytes)
         
@@ -56,8 +73,7 @@ def decode_LSB(image_path, password):
         return plaintext
 
     except Exception as e:
-        log_event("DECODE", "ERROR", str(e))
-        return f"Error: {str(e)}"
+        log_event("DECODE", "ERROR", str(e)); return f"Error: {str(e)}"
     finally:
         if 'img_array' in locals(): del img_array
         gc.collect()

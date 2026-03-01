@@ -9,9 +9,26 @@ from .ecc import HammingCode
 from .utils import get_seed_from_password
 
 HEADER_BITS = 32
+REDUNDANCY = 3 # Each header bit is stored 3 times
+
+def _header_positions(flat_size, seed):
+    """Deterministic header positioning with Triple Redundancy."""
+    pos = []
+    curr = seed
+    a, c, m = 1664525, 1013904223, 2**32
+    # Use first 2M pixels for header scattering
+    search_space = min(flat_size, 2000000)
+    
+    total_slots = HEADER_BITS * REDUNDANCY
+    while len(pos) < total_slots:
+        curr = (a * curr + c) % m
+        p = curr % search_space
+        if p not in pos: pos.append(p)
+            
+    return np.array(pos, dtype=np.int64)
 
 def encode_LSB(image_path, plaintext, password, output_path):
-    """Full-cycle encoding with Fixed Header placement for absolute integrity."""
+    """Encodes with a scattered, triple-redundant header for max robustness."""
     temp_bmp = None
     try:
         cipher = SecureAESCipher(password)
@@ -39,14 +56,20 @@ def encode_LSB(image_path, plaintext, password, output_path):
         # ── EMBEDDING ──
         streamer = BmpStreamer(temp_bmp)
         with streamer.open(mode='r+') as img_array:
-            # 1. Fixed Header (First 32 pixels of channel 0 - Red)
+            rows, cols, ch = img_array.shape
+            # 1. Prepare Header Bits with Redundancy
             h_bits = np.unpackbits(np.array([payload_bit_length], dtype=">u4").view(np.uint8))
-            for i in range(HEADER_BITS):
-                # Using first 32 pixels of row 0
-                img_array[0, i, 0] = (img_array[0, i, 0] & 0xFE) | h_bits[i]
+            redundant_h_bits = np.repeat(h_bits, REDUNDANCY)
             
-            # 2. Adaptive Data (Skipping the header zone)
-            AdaptiveLSBCore(password=password).encode(img_array, protected_bytes, forbidden_indices=set(range(HEADER_BITS)))
+            # 2. Map to Scattered Positions
+            h_pos = _header_positions(img_array.size, get_seed_from_password(password))
+            for i in range(len(h_pos)):
+                p = h_pos[i]
+                r, cl, cn = (p // ch) // cols, (p // ch) % cols, p % ch
+                img_array[r, cl, cn] = (img_array[r, cl, cn] & 0xFE) | redundant_h_bits[i]
+            
+            # 3. Adaptive Data (Skipping header slots)
+            AdaptiveLSBCore(password=password).encode(img_array, protected_bytes, forbidden_indices=set(h_pos))
             img_array.flush()
 
         # ── FINALIZATION ──
@@ -59,13 +82,13 @@ def encode_LSB(image_path, plaintext, password, output_path):
             else: shutil.move(temp_bmp, output_path)
         else:
             with Image.open(temp_bmp) as final_bmp:
-                final_bmp.save(output_path, "PNG", optimize=False, compress_level=1)
+                # Force strictly lossless save
+                final_bmp.save(output_path, "PNG", optimize=False, compress_level=0)
 
         log_event("ENCODE", "SUCCESS", f"Stored in {output_path}")
         return f"Successfully encoded in {output_path}"
 
     except Exception as e:
-        log_event("ENCODE", "ERROR", str(e))
-        raise e
+        log_event("ENCODE", "ERROR", str(e)); raise e
     finally:
         if temp_bmp and os.path.exists(temp_bmp): os.remove(temp_bmp)
