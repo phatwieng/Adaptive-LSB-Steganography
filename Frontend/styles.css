@@ -360,49 +360,50 @@ body {
 }
 
 .stat-card {
-    background: var(--surface2) !important;
-    border: 1px solid var(--border) !important;
-    border-top: 2px solid var(--yellow) !important;
-    padding: 18px 14px !important;
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-top: none !important;
+    padding: 24px 16px !important;
     text-align: center !important;
+    transition: transform 0.2s, background 0.2s;
+}
+
+.stat-card:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+    transform: translateY(-2px);
 }
 
 .stat-card h4 {
     font-family: var(--mono) !important;
-    font-size: 0.805rem !important;
-    letter-spacing: 0.14em !important;
+    font-size: 0.75rem !important;
+    letter-spacing: 0.12em !important;
     text-transform: uppercase !important;
     color: var(--gray) !important;
-    font-weight: 400 !important;
-    margin-bottom: 9px !important;
+    font-weight: 500 !important;
+    margin-bottom: 12px !important;
+    opacity: 0.8;
 }
 
 .stat-card .value {
     font-family: var(--mono) !important;
-    font-size: 1.625rem !important;
+    font-size: 1.8rem !important;
     font-weight: 700 !important;
     color: #ffffff !important;
-    letter-spacing: -0.02em !important;
+    letter-spacing: -0.03em !important;
     line-height: 1.1;
-}
-
-.stat-card .value .unit {
-    font-size: 0.745rem !important;
-    color: var(--gray) !important;
-    margin-left: 2px;
 }
 
 .quality-indicator {
     display: inline-block;
-    margin-top: 8px !important;
+    margin-top: 12px !important;
     font-family: var(--mono) !important;
-    font-size: 0.685rem !important;
-    letter-spacing: 0.14em !important;
+    font-size: 0.65rem !important;
+    letter-spacing: 0.12em !important;
     text-transform: uppercase;
-    padding: 2px 8px !important;
+    padding: 3px 10px !important;
     background: var(--yellow) !important;
     color: #000 !important;
-    border-radius: 0 !important;
+    border-radius: 2px !important;
     font-weight: 700 !important;
 }
 

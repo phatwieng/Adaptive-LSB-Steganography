@@ -92,6 +92,9 @@ def comprehensive_analysis(path1, path2):
             if len(all_s) < 8: all_s.append(calculate_ssim(a.astype(np.float32)/255.0, b.astype(np.float32)/255.0))
 
         pv, mv, sv, rv = float(np.mean(all_p)), float(np.mean(all_m)), float(np.mean(all_s)), float(np.mean(all_r))
+        rs_score = rs_analysis(stego_low)
+        spa_score = sample_pair_analysis(stego_low)
+        
         freq = analyze_frequency_signature(orig_low, stego_low)
         hist = analyze_histogram_changes(o_f, s_f)
         corr = analyze_correlation(o_f, s_f)
@@ -100,7 +103,10 @@ def comprehensive_analysis(path1, path2):
         return {
             'psnr': pv, 'mse': mv, 'ssim': sv,
             'stealth_metrics': {
-                'chi_square_risk': rv, 'frequency_fidelity': freq['frequency_fidelity'],
+                'chi_square_risk': rv, 
+                'rs_estimate': rs_score,
+                'spa_estimate': spa_score,
+                'frequency_fidelity': freq['frequency_fidelity'],
                 'stealth_score': calculate_quality_score({
                     'psnr': pv, 'ssim': sv, 'stealth_metrics': {'chi_square_risk': rv, 'frequency_fidelity': freq['frequency_fidelity']},
                     'histogram_statistics': hist, 'correlation_analysis': corr

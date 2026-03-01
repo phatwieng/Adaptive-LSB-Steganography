@@ -104,12 +104,38 @@ class UIManager {
 
     _renderStealthScore(a) {
         const sm = a.stealth_metrics || {};
-        const risk = (sm.chi_square_risk * 100).toFixed(2);
+        const rs = (sm.rs_estimate * 100).toFixed(2);
+        const spa = (sm.spa_estimate * 100).toFixed(2);
+        const chi = (sm.chi_square_risk * 100).toFixed(2);
+        
         return `
+        <h2>Forensic Steganalysis Diagnostics</h2>
         <div class="stats-grid">
-            <div class="stat-card"><h4>Stealth Score</h4><div class="value">${sm.stealth_score?.toFixed(1)}<span class="unit">/100</span></div></div>
-            <div class="stat-card"><h4>Chi-Square Risk</h4><div class="value">${risk}<span class="unit">%</span></div><div class="quality-indicator">${risk < 50 ? 'Safe' : 'High'}</div></div>
-            <div class="stat-card"><h4>Freq Fidelity</h4><div class="value">${sm.frequency_fidelity?.toFixed(4)}</div><div class="quality-indicator">Excellent</div></div>
+            <div class="stat-card">
+                <h4>RS Analysis</h4>
+                <div class="value">${rs}<span class="unit">%</span></div>
+                <div class="quality-indicator" style="background:${sm.rs_estimate < 0.05 ? '#2ecc71' : '#e74c3c'} !important;">
+                    ${sm.rs_estimate < 0.05 ? 'SECURE' : 'DETECTION RISK'}
+                </div>
+            </div>
+            <div class="stat-card">
+                <h4>Sample Pair (SPA)</h4>
+                <div class="value">${spa}<span class="unit">%</span></div>
+                <div class="quality-indicator" style="background:${sm.spa_estimate < 0.05 ? '#2ecc71' : '#e74c3c'} !important;">
+                    ${sm.spa_estimate < 0.05 ? 'SECURE' : 'DETECTION RISK'}
+                </div>
+            </div>
+            <div class="stat-card">
+                <h4>Chi-Square Risk</h4>
+                <div class="value">${chi}<span class="unit">%</span></div>
+                <div class="quality-indicator" style="background:${sm.chi_square_risk < 0.5 ? '#2ecc71' : '#e74c3c'} !important;">
+                    ${sm.chi_square_risk < 0.5 ? 'LOW' : 'HIGH'}
+                </div>
+            </div>
+            <div class="stat-card">
+                <h4>Stealth Score</h4>
+                <div class="value">${sm.stealth_score?.toFixed(1)}<span class="unit">/100</span></div>
+            </div>
         </div>`;
     }
 

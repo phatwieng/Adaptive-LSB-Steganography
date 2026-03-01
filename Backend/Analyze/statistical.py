@@ -36,6 +36,58 @@ def analyze_lsb_pairing(img_uint):
         return get_risk(img_uint)
     except: return 0.0
 
+def rs_analysis(img_uint):
+    """
+    RS Analysis (Regular/Singular) for LSB Steganalysis.
+    Estimates embedding rate (p).
+    """
+    try:
+        def get_counts(ch):
+            h, w = ch.shape
+            ch = ch[:h-h%2, :w-w%2].astype(np.int32)
+            groups = ch.reshape(-1, 2)
+            
+            def diff(g): return np.abs(g[:, 0] - g[:, 1])
+            def flip(g): 
+                res = g.copy()
+                res[:, 1] = res[:, 1] ^ 1
+                return res
+            
+            f0 = diff(groups)
+            f1 = diff(flip(groups))
+            
+            r = np.sum(f1 > f0)
+            s = np.sum(f1 < f0)
+            return float(r), float(s)
+
+        if len(img_uint.shape) == 3:
+            counts = [get_counts(img_uint[:,:,i]) for i in range(3)]
+            r = sum(c[0] for c in counts)
+            s = sum(c[1] for c in counts)
+        else:
+            r, s = get_counts(img_uint)
+            
+        p = (r - s) / (r + s + 1e-10)
+        return float(max(0, min(p, 1.0)))
+    except: return 0.0
+
+def sample_pair_analysis(img_uint):
+    """
+    Sample Pair Analysis (SPA) to estimate embedding rate.
+    """
+    try:
+        x = img_uint.ravel().astype(np.int32)
+        # Counts pairs (2k, 2k+1)
+        p = (x[0::2] >> 1) == (x[1::2] >> 1)
+        # Subset E: both even or both odd in terms of LSB
+        e = (x[0::2] & 1) == (x[1::2] & 1)
+        m = np.sum(p & ~e)
+        n_count = np.sum(p & e)
+        
+        p_est = 2 * (m - n_count) / (len(x) / 2 + 1e-10)
+        return float(max(0, min(p_est, 1.0)))
+    except: return 0.0
+
 def analyze_histogram_changes(a1, a2):
     def get_h(a):
         img = (a * 255).astype(np.uint8) if a.dtype != np.uint8 else a
