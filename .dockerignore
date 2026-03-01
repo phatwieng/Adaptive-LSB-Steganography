@@ -1,0 +1,15 @@
+node_modules
+Backend/uploads
+__pycache__
+*.pyc
+*.log
+*.dat
+*.tmp
+*.bmp
+.env
+dist
+.vscode
+.cursor
+.DS_Store
+Dockerfile
+.dockerignore

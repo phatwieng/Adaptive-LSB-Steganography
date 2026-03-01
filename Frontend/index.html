@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LSB Steganography</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="stylesheet" href="./styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="container">
+
+    <header class="header">
+        <h1>ADAPTIVE LSB STEGANOGRAPHY</h1>
+        <p>Adaptive Bit Embedding &nbsp;·&nbsp; AES-256 Encryption &nbsp;·&nbsp; Image Analysis</p>
+    </header>
+
+    <nav class="tabs">
+        <button class="tab active" data-tab="encode">Encode</button>
+        <button class="tab" data-tab="decode">Decode</button>
+        <button class="tab" data-tab="capacity">Capacity</button>
+        <button class="tab" data-tab="analyze">Analysis</button>
+    </nav>
+
+    <!-- ENCODE -->
+    <div id="encode-tab" class="tab-content active">
+        <div class="section">
+            <h2>Hide Message in Image</h2>
+            <form id="encode-form">
+                <div class="form-group">
+                    <label>Source Image</label>
+                    <div id="encode-image-upload" class="file-upload">
+                        <span class="upload-icon">↑</span>
+                        <div class="file-upload-text">Click to select or drag &amp; drop</div>
+                        <input type="file" id="encode-image-input" accept="image/*">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="encode-message">Secret Message</label>
+                    <textarea id="encode-message" placeholder="Enter your secret message here..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="encode-password">Password (min 4 characters)</label>
+                    <input type="password" id="encode-password" placeholder="Enter encryption password" required minlength="4">
+                </div>
+                <div id="encode-alert" class="alert"></div>
+                <div id="encode-loading" class="loading">
+                    <div class="spinner"></div>
+                    <p>Encoding message...</p>
+                </div>
+                <button type="submit" id="encode-btn" class="btn btn-primary btn-block">Encode Message</button>
+            </form>
+            <div id="encode-result" class="result"></div>
+        </div>
+    </div>
+
+    <!-- DECODE -->
+    <div id="decode-tab" class="tab-content">
+        <div class="section">
+            <h2>Extract Hidden Message</h2>
+            <form id="decode-form">
+                <div class="form-group">
+                    <label>Stego Image</label>
+                    <div id="decode-image-upload" class="file-upload">
+                        <span class="upload-icon">↑</span>
+                        <div class="file-upload-text">Click to select or drag &amp; drop</div>
+                        <input type="file" id="decode-image-input" accept="image/*">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="decode-password">Password</label>
+                    <input type="password" id="decode-password" placeholder="Enter decryption password" required>
+                </div>
+                <div id="decode-alert" class="alert"></div>
+                <div id="decode-loading" class="loading">
+                    <div class="spinner"></div>
+                    <p>Decoding message...</p>
+                </div>
+                <button type="submit" id="decode-btn" class="btn btn-primary btn-block">Decode Message</button>
+            </form>
+            <div id="decode-result" class="result"></div>
+        </div>
+    </div>
+
+    <!-- CAPACITY -->
+    <div id="capacity-tab" class="tab-content">
+        <div class="section">
+            <h2>Check Image Capacity</h2>
+            <p style="font-family: var(--mono); font-size: 0.7rem; color: var(--gray); letter-spacing: 0.06em; margin-bottom: 28px; text-align: center;">
+                Calculate the maximum data that can be hidden in your image
+            </p>
+            <form id="capacity-form">
+                <div class="form-group">
+                    <label>Source Image</label>
+                    <div id="capacity-image-upload" class="file-upload">
+                        <span class="upload-icon">↑</span>
+                        <div class="file-upload-text">Click to select or drag &amp; drop</div>
+                        <input type="file" id="capacity-image-input" accept="image/*">
+                    </div>
+                </div>
+                <div id="capacity-alert" class="alert"></div>
+                <div id="capacity-loading" class="loading">
+                    <div class="spinner"></div>
+                    <p>Analyzing image...</p>
+                </div>
+                <button type="submit" id="capacity-btn" class="btn btn-primary btn-block">Check Capacity</button>
+            </form>
+            <div id="capacity-result" class="result"></div>
+        </div>
+    </div>
+
+    <!-- ANALYZE -->
+    <div id="analyze-tab" class="tab-content">
+        <div class="section">
+            <h2>Comprehensive Image Analysis</h2>
+            <p style="font-family: var(--mono); font-size: 0.7rem; color: var(--gray); letter-spacing: 0.06em; margin-bottom: 28px; text-align: center;">
+                Spectral &amp; statistical comparison between original and stego images
+            </p>
+            <form id="analyze-form">
+                <div class="form-group">
+                    <label>Original Image</label>
+                    <div id="analyze-original-upload" class="file-upload">
+                        <span class="upload-icon">↑</span>
+                        <div class="file-upload-text">Click to select or drag &amp; drop</div>
+                        <input type="file" id="analyze-original-input" accept="image/*">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Stego Image (with hidden message)</label>
+                    <div id="analyze-stego-upload" class="file-upload">
+                        <span class="upload-icon">↑</span>
+                        <div class="file-upload-text">Click to select or drag &amp; drop</div>
+                        <input type="file" id="analyze-stego-input" accept="image/*">
+                    </div>
+                </div>
+                <div id="analyze-alert" class="alert"></div>
+                <div id="analyze-loading" class="loading">
+                    <div class="spinner"></div>
+                    <p>Analyzing images... 15–60 seconds</p>
+                </div>
+                <button type="submit" id="analyze-btn" class="btn btn-primary btn-block">Analyze Images</button>
+            </form>
+            <div id="analyze-result" class="result"></div>
+        </div>
+    </div>
+
+</div>
+
+<footer class="site-footer">
+    <p>LSB Steganography &nbsp;·&nbsp; AES-256 Encryption</p>
+    <p>Adaptive Bit Embedding &nbsp;·&nbsp; Comprehensive Analysis</p>
+</footer>
+
+<script type="module" src="./main.js"></script>
+</body>
+</html>
