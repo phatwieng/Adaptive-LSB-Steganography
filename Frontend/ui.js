@@ -85,15 +85,15 @@ class UIManager {
 
     displayAnalysis(a, id) {
         const el = document.getElementById(id);
-        let html = this._renderStealthScore(a);
-        html += this._renderQualityMetrics(a);
-        html += this._renderComparison(a);
-        html += this._renderPixelDiffs(a);
-        html += this._renderSpatialDist(a);
-        html += this._renderHistogramStats(a);
-        html += this._renderAdvanced(a);
+        let html = '<div class="analysis-section">' + this._renderStealthScore(a) + '</div>';
+        html += '<div class="analysis-section">' + this._renderQualityMetrics(a) + '</div>';
+        html += '<div class="analysis-section">' + this._renderComparison(a) + '</div>';
+        html += '<div class="analysis-section">' + this._renderPixelDiffs(a) + '</div>';
+        html += '<div class="analysis-section">' + this._renderSpatialDist(a) + '</div>';
+        html += '<div class="analysis-section">' + this._renderHistogramStats(a) + '</div>';
+        html += '<div class="analysis-section">' + this._renderAdvanced(a) + '</div>';
         html += '<div id="histogram-charts"></div>';
-        html += this._renderLSBAnalysis(a.bit_plane_analysis);
+        html += '<div class="analysis-section">' + this._renderLSBAnalysis(a.bit_plane_analysis) + '</div>';
         
         el.innerHTML = html;
         this.toggleResult(id, true);
@@ -194,9 +194,9 @@ class UIManager {
                     <img src="data:image/png;base64,${data.image}">
                     <div class="mini-stat"><span class="value">${data.entropy.toFixed(3)}</span></div>
                 </div>`).join('');
-            return `<div class="analysis-section lsb-section"><h2>${ch.toUpperCase()}</h2><div class="bit-planes-grid">${cards}</div></div>`;
+            return `<h3 style="margin: 20px 0 10px; font-family: var(--mono); font-size: 0.8rem; color: var(--yellow);">${ch.toUpperCase()} BIT PLANES</h3><div class="bit-planes-grid">${cards}</div>`;
         }).join('');
-        return `<div class="analysis-section"><h2>Bit Plane Analysis</h2>${sections}</div>`;
+        return `<h2>Bit Plane Analysis</h2>${sections}`;
     }
 
     downloadBlob(blob, filename) {
@@ -211,7 +211,8 @@ class UIManager {
         const ctx = document.getElementById('histogram-charts');
         if (!ctx) return;
         
-        ctx.innerHTML = '<h2>Spectral Histogram Analysis</h2><div id="hist-container" style="display:flex; flex-direction:column; gap:25px;"></div>';
+        // Wrap everything in a single analysis-section to fix "hanging" content
+        ctx.innerHTML = '<div class="analysis-section"><h2>Spectral Histogram Analysis</h2><div id="hist-container" style="display:flex; flex-direction:column; gap:25px;"></div></div>';
         const container = document.getElementById('hist-container');
         
         const channels = [
@@ -223,9 +224,6 @@ class UIManager {
         channels.forEach(ch => {
             const chartDiv = document.createElement('div');
             chartDiv.className = 'chart-container';
-            // Custom frame with yellow left border for each chart
-            chartDiv.style.borderLeft = '4px solid var(--yellow)';
-            chartDiv.style.height = '300px'; 
             chartDiv.innerHTML = `<h4 style="margin-bottom:10px; color:#ddd; font-size:0.85rem; letter-spacing:0.1em;">${ch.name.toUpperCase()}</h4><canvas id="hist-${ch.id}"></canvas>`;
             container.appendChild(chartDiv);
 
@@ -234,7 +232,7 @@ class UIManager {
                 data: {
                     labels: Array.from({length: 256}, (_, i) => i),
                     datasets: [
-                        { label: 'Original', data: a.histogram_original[ch.id], borderColor: '#222', borderWidth: 1, fill: false, pointRadius: 0 },
+                        { label: 'Original', data: a.histogram_original[ch.id], borderColor: '#ffffff', borderWidth: 1, fill: false, pointRadius: 0 },
                         { label: 'Stego', data: a.histogram_stego[ch.id], borderColor: ch.color, borderWidth: 1.5, fill: false, pointRadius: 0 }
                     ]
                 },
@@ -245,14 +243,14 @@ class UIManager {
                     scales: { 
                         y: { 
                             display: true, 
-                            title: { display: true, text: 'PIXEL DENSITY', color: '#555', font: { size: 9, weight: 'bold' }, padding: -20 },
-                            grid: { color: 'rgba(255,255,255,0.12)', lineWidth: 1 },
-                            ticks: { color: '#444', font: { size: 8 } } 
+                            title: { display: true, text: 'PIXEL DENSITY', color: '#888', font: { size: 9, weight: 'bold' }, padding: -20 },
+                            grid: { color: 'rgba(255,255,255,0.12)', lineWidth: 0.5 },
+                            ticks: { color: '#555', font: { size: 8 } } 
                         },
                         x: { 
                             display: true,
-                            title: { display: true, text: 'INTENSITY (0-255)', color: '#555', font: { size: 9, weight: 'bold' }, padding: -15 },
-                            grid: { color: 'rgba(255,255,255,0.12)', lineWidth: 1 }, 
+                            title: { display: true, text: 'INTENSITY (0-255)', color: '#888', font: { size: 9, weight: 'bold' }, padding: -15 },
+                            grid: { color: 'rgba(255,255,255,0.12)', lineWidth: 0.5 }, 
                             ticks: { color: '#666', font: { size: 9 } } 
                         }
                     }, 
@@ -261,7 +259,7 @@ class UIManager {
                             display: true, 
                             position: 'top', 
                             align: 'end',
-                            labels: { color: '#888', font: { size: 10 }, boxWidth: 10, usePointStyle: true } 
+                            labels: { color: '#aaa', font: { size: 10 }, boxWidth: 10, usePointStyle: true } 
                         } 
                     } 
                 }
