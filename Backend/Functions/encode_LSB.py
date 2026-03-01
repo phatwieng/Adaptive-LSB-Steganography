@@ -82,8 +82,8 @@ def encode_LSB(image_path, plaintext, password, output_path):
             else: shutil.move(temp_bmp, output_path)
         else:
             with Image.open(temp_bmp) as final_bmp:
-                # Force strictly lossless save
-                final_bmp.save(output_path, "PNG", optimize=False, compress_level=0)
+                # Force strictly lossless save with zero compression
+                final_bmp.save(output_path, "PNG", compress_level=0)
 
         log_event("ENCODE", "SUCCESS", f"Stored in {output_path}")
         return f"Successfully encoded in {output_path}"

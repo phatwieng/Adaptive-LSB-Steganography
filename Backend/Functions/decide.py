@@ -113,12 +113,14 @@ class AdaptiveLSBCore:
                     r, cl = l_idx // cols, l_idx % cols
                     bits = 2 if score[l_idx] >= 70 else 1
                     bits = min(bits, bit_len - bit_idx)
+                    
                     if bits == 1:
-                        bit_payload[bit_idx] = block[r, cl, c] & 1
+                        bit_payload[bit_idx] = img[rs + r, cl, c] & 1
                         bit_idx += 1
                     else:
-                        v = block[r, cl, c]
-                        bit_payload[bit_idx], bit_payload[bit_idx+1] = (v >> 1) & 1, v & 1
+                        v = img[rs + r, cl, c]
+                        bit_payload[bit_idx] = (v >> 1) & 1
+                        bit_payload[bit_idx+1] = v & 1
                         bit_idx += 2
                     if bit_idx >= bit_len: return np.packbits(bit_payload).tobytes()
         return np.packbits(bit_payload).tobytes()
