@@ -26,7 +26,8 @@ class BmpStreamer:
         
         # ── INFO HEADER (40 bytes) ──
         # size, w, h, planes, bit, comp, img_sz, h_res, v_res, clr, imp_clr
-        info = struct.pack('<IiiHHIIiiII', 40, w, h, 1, 24, 0, img_size, 2835, 2835, 0, 0)
+        h_res, v_res = 2835, 2835 # 72 DPI
+        info = struct.pack('<IiiHHIIiiII', 40, w, h, 1, 24, 0, img_size, h_res, v_res, 0, 0)
         
         with open(self.filepath, 'wb') as f:
             f.write(header)
