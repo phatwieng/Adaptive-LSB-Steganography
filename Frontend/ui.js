@@ -63,8 +63,9 @@ class UIManager {
     /* ── RENDERING ── */
     displayMessage(msg, id) {
         const el = document.getElementById(id);
+        if (!el) return;
         const txt = el.querySelector('.result-text');
-        txt.textContent = msg;
+        if (txt) txt.textContent = msg;
         this.toggleResult(id, true);
     }
 
