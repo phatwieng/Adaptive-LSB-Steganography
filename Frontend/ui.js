@@ -142,7 +142,7 @@ class UIManager {
             <h2>Pixel Differences</h2>
             <div class="stats-grid">
                 <div class="mini-stat"><span class="label">Changed Pixels</span><span class="value">${d.percent_changed?.toFixed(4)}%</span></div>
-                <div class="mini-stat"><span class="label">Max Difference</span><span class="value">${d.max_difference || 0}</span></div>
+                <div class="mini-stat"><span class="label">Total Variation Diff</span><span class="value">${(d.total_variation_diff * 100).toFixed(6)}%</span></div>
                 <div class="mini-stat"><span class="label">Mean Difference</span><span class="value">${d.mean_difference?.toFixed(6)}</span></div>
                 <div class="mini-stat"><span class="label">Std Deviation</span><span class="value">${d.std_difference?.toFixed(6) || 0}</span></div>
             </div>
@@ -209,19 +209,43 @@ class UIManager {
     renderHistograms(a) {
         const ctx = document.getElementById('histogram-charts');
         if (!ctx) return;
-        ctx.innerHTML = '<h2>Spectral Histogram Analysis</h2><div class="chart-container"><canvas id="histChart"></canvas></div>';
-        const config = {
-            type: 'line',
-            data: {
-                labels: Array.from({length: 256}, (_, i) => i),
-                datasets: [
-                    { label: 'Original', data: a.histogram_original.red, borderColor: '#aaa', borderWidth: 1, fill: false, pointRadius: 0 },
-                    { label: 'Stego', data: a.histogram_stego.red, borderColor: '#f5c800', borderWidth: 1, fill: false, pointRadius: 0 }
-                ]
-            },
-            options: { responsive: true, scales: { y: { display: false } }, plugins: { legend: { labels: { color: '#aaa' } } } }
-        };
-        new Chart(document.getElementById('histChart'), config);
+        
+        ctx.innerHTML = '<h2>Spectral Histogram Analysis</h2><div class="image-grid" id="hist-container"></div>';
+        const container = document.getElementById('hist-container');
+        
+        const channels = [
+            { id: 'red', name: 'Red Channel', color: '#ff4444' },
+            { id: 'green', name: 'Green Channel', color: '#44ff44' },
+            { id: 'blue', name: 'Blue Channel', color: '#4444ff' }
+        ];
+
+        channels.forEach(ch => {
+            const chartDiv = document.createElement('div');
+            chartDiv.className = 'chart-container';
+            chartDiv.innerHTML = `<h4 style="margin-bottom:10px; color:#aaa; font-size:0.65rem;">${ch.name.toUpperCase()}</h4><canvas id="hist-${ch.id}"></canvas>`;
+            container.appendChild(chartDiv);
+
+            const config = {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 256}, (_, i) => i),
+                    datasets: [
+                        { label: 'Original', data: a.histogram_original[ch.id], borderColor: '#444', borderWidth: 1.5, fill: false, pointRadius: 0 },
+                        { label: 'Stego', data: a.histogram_stego[ch.id], borderColor: ch.color, borderWidth: 1.5, fill: false, pointRadius: 0 }
+                    ]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    scales: { 
+                        y: { display: false },
+                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#666', font: { size: 8 } } }
+                    }, 
+                    plugins: { legend: { display: false } } 
+                }
+            };
+            new Chart(document.getElementById(`hist-${ch.id}`), config);
+        });
     }
 }
 

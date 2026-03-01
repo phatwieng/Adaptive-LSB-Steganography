@@ -52,7 +52,10 @@ def decode_LSB(image_path, password):
             h_bits.append(img_array[r, cl, cn] & 1)
         
         payload_bit_length = int(np.packbits(np.array(h_bits, dtype=np.uint8)).view(">u4")[0])
+        log_event("DECODE", "INFO", f"Extracted payload_bit_length: {payload_bit_length}")
+        
         if payload_bit_length <= 0 or payload_bit_length > img_array.size:
+            log_event("DECODE", "ERROR", f"Invalid length: {payload_bit_length}")
             return "Error: Invalid payload length or corrupted data."
 
         # ── DATA EXTRACTION ──

@@ -4,14 +4,21 @@ import logging
 logger = logging.getLogger(__name__)
 
 def analyze_pixel_differences(a1, a2):
-    """Calculates granular pixel-level differences."""
+    """Calculates granular pixel-level differences and Total Variation."""
     d = np.abs(a2 - a1)
     ch = d > 0
+    
+    # ── TOTAL VARIATION (Smoothness Change) ──
+    # Measures how much the 'texture' of the noise changed
+    tv_orig = np.sum(np.abs(np.diff(a1, axis=0))) + np.sum(np.abs(np.diff(a1, axis=1)))
+    tv_stego = np.sum(np.abs(np.diff(a2, axis=0))) + np.sum(np.abs(np.diff(a2, axis=1)))
+    
     return {
         'changed_pixels_ratio': float(np.mean(ch)),
         'mean_diff': float(np.mean(d)),
         'max_diff': float(np.max(d)),
-        'std_diff': float(np.std(d))
+        'std_diff': float(np.std(d)),
+        'total_variation_diff': float(abs(tv_stego - tv_orig) / (tv_orig + 1e-10))
     }
 
 def analyze_spatial_distribution(a1, a2):
