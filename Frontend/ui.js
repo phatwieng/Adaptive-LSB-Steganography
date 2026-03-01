@@ -224,7 +224,8 @@ class UIManager {
         channels.forEach(ch => {
             const chartDiv = document.createElement('div');
             chartDiv.className = 'chart-container';
-            chartDiv.innerHTML = `<h4 style="margin-bottom:10px; color:#ddd; font-size:0.85rem; letter-spacing:0.1em;">${ch.name.toUpperCase()}</h4><canvas id="hist-${ch.id}"></canvas>`;
+            chartDiv.style.cssText = 'background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12); border-left: 2px solid ' + ch.color + '; padding: 16px 12px 12px; border-radius: 4px;';
+            chartDiv.innerHTML = `<h4 style="margin-bottom:12px; color:#ccc; font-size:0.8rem; letter-spacing:0.12em;">${ch.name.toUpperCase()}</h4><canvas id="hist-${ch.id}" style="height:160px;"></canvas>`;
             container.appendChild(chartDiv);
 
             const config = {
@@ -232,36 +233,38 @@ class UIManager {
                 data: {
                     labels: Array.from({length: 256}, (_, i) => i),
                     datasets: [
-                        { label: 'Original', data: a.histogram_original[ch.id], borderColor: '#ffffff', borderWidth: 1, fill: false, pointRadius: 0 },
+                        { label: 'Original', data: a.histogram_original[ch.id], borderColor: '#cccccc', borderWidth: 1, fill: false, pointRadius: 0 },
                         { label: 'Stego', data: a.histogram_stego[ch.id], borderColor: ch.color, borderWidth: 1.5, fill: false, pointRadius: 0 }
                     ]
                 },
-                options: { 
-                    responsive: true, 
+                options: {
+                    responsive: true,
                     maintainAspectRatio: false,
-                    layout: { padding: { left: 10, right: 10, top: 0, bottom: 0 } },
-                    scales: { 
-                        y: { 
-                            display: true, 
-                            title: { display: true, text: 'PIXEL DENSITY', color: '#888', font: { size: 9, weight: 'bold' }, padding: -20 },
-                            grid: { color: 'rgba(255,255,255,0.12)', lineWidth: 0.5 },
-                            ticks: { color: '#555', font: { size: 8 } } 
-                        },
-                        x: { 
+                    layout: { padding: { left: 4, right: 16, top: 8, bottom: 4 } },
+                    scales: {
+                        y: {
                             display: true,
-                            title: { display: true, text: 'INTENSITY (0-255)', color: '#888', font: { size: 9, weight: 'bold' }, padding: -15 },
-                            grid: { color: 'rgba(255,255,255,0.12)', lineWidth: 0.5 }, 
-                            ticks: { color: '#666', font: { size: 9 } } 
+                            title: { display: true, text: 'PIXEL DENSITY', color: '#999', font: { size: 9, weight: 'bold' } },
+                            grid: { color: 'rgba(255,255,255,0.07)', lineWidth: 1 },
+                            border: { color: 'rgba(255,255,255,0.15)' },
+                            ticks: { color: '#888', font: { size: 8 }, maxTicksLimit: 6 }
+                        },
+                        x: {
+                            display: true,
+                            title: { display: true, text: 'INTENSITY (0-255)', color: '#999', font: { size: 9, weight: 'bold' } },
+                            grid: { color: 'rgba(255,255,255,0.07)', lineWidth: 1 },
+                            border: { color: 'rgba(255,255,255,0.15)' },
+                            ticks: { color: '#888', font: { size: 9 }, maxTicksLimit: 16 }
                         }
-                    }, 
-                    plugins: { 
-                        legend: { 
-                            display: true, 
-                            position: 'top', 
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
                             align: 'end',
-                            labels: { color: '#aaa', font: { size: 10 }, boxWidth: 10, usePointStyle: true } 
-                        } 
-                    } 
+                            labels: { color: '#bbb', font: { size: 10 }, boxWidth: 10, usePointStyle: true }
+                        }
+                    }
                 }
             };
             new Chart(document.getElementById(`hist-${ch.id}`), config);
