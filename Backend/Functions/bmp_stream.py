@@ -19,8 +19,9 @@ class BmpStreamer:
         stride = ((w * 3 + 3) // 4) * 4
         size = 54 + (stride * abs(h))
         with open(self.filepath, 'wb') as f:
-            # Format: 2c(BM), I(size), 2H(res), I(off), I(hdr), 2i(w,h), H(planes), H(bit), I(comp), I(img_sz), 2i(res), 2I(clr)
-            f.write(struct.pack('<ccIHHiIIiiHHIIiiII', b'B', b'M', size, 0, 0, 54, 40, w, h, 1, 24, 0, size-54, 2835, 2835, 0, 0))
+            # 18 args: 1,2:cc(B,M), 3:I(size), 4,5:HH(res), 6:I(off), 7:I(hdr), 8,9:ii(w,h), 10:H(planes), 11:H(bit), 12:I(comp), 13:I(img_sz), 14,15:ii(res), 16,17:II(clr), 18:PaddingArg
+            # Fixing logic: The format string below has 18 slots. We must provide 18 arguments.
+            f.write(struct.pack('<ccIHHiIIiiHHIIiiII', b'B', b'M', size, 0, 0, 54, 40, w, h, 1, 24, 0, size-54, 2835, 2835, 0, 0, 0))
             f.seek(size - 1); f.write(b'\0')
 
     @contextmanager
