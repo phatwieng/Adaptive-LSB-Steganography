@@ -222,8 +222,8 @@ class UIManager {
         channels.forEach(ch => {
             const chartDiv = document.createElement('div');
             chartDiv.className = 'chart-container';
-            chartDiv.style.height = '180px'; // Fixed height
-            chartDiv.innerHTML = `<h4 style="margin-bottom:10px; color:#aaa; font-size:0.7rem; letter-spacing:0.1em;">${ch.name.toUpperCase()}</h4><canvas id="hist-${ch.id}"></canvas>`;
+            chartDiv.style.height = '240px'; 
+            chartDiv.innerHTML = `<h4 style="margin-bottom:15px; color:#ddd; font-size:0.8rem; letter-spacing:0.1em; text-align:center;">${ch.name.toUpperCase()} (Intensity Distribution)</h4><canvas id="hist-${ch.id}"></canvas>`;
             container.appendChild(chartDiv);
 
             const config = {
@@ -231,7 +231,7 @@ class UIManager {
                 data: {
                     labels: Array.from({length: 256}, (_, i) => i),
                     datasets: [
-                        { label: 'Original', data: a.histogram_original[ch.id], borderColor: '#333', borderWidth: 1, fill: false, pointRadius: 0 },
+                        { label: 'Original', data: a.histogram_original[ch.id], borderColor: '#444', borderWidth: 1, fill: false, pointRadius: 0 },
                         { label: 'Stego', data: a.histogram_stego[ch.id], borderColor: ch.color, borderWidth: 1.5, fill: false, pointRadius: 0 }
                     ]
                 },
@@ -241,16 +241,25 @@ class UIManager {
                     scales: { 
                         y: { 
                             display: true, 
-                            grid: { color: 'rgba(255,255,255,0.03)' },
-                            ticks: { display: false } 
+                            title: { display: true, text: 'Pixel Count', color: '#666', font: { size: 10 } },
+                            grid: { color: 'rgba(255,255,255,0.05)', borderDash: [2, 2] },
+                            ticks: { color: '#444', font: { size: 8 } } 
                         },
                         x: { 
                             display: true,
+                            title: { display: true, text: 'Color Value (0-255)', color: '#666', font: { size: 10 } },
                             grid: { color: 'rgba(255,255,255,0.05)' }, 
-                            ticks: { color: '#555', font: { size: 9 } } 
+                            ticks: { color: '#666', font: { size: 9 } } 
                         }
                     }, 
-                    plugins: { legend: { display: false } } 
+                    plugins: { 
+                        legend: { 
+                            display: true, 
+                            position: 'top', 
+                            align: 'end',
+                            labels: { color: '#aaa', font: { size: 9 }, boxWidth: 12 } 
+                        } 
+                    } 
                 }
             };
             new Chart(document.getElementById(`hist-${ch.id}`), config);
