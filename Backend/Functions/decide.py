@@ -10,7 +10,10 @@ class AdaptiveLSBCore:
         thresholds = [55, 45, 35, 25, 15, 5]
         bits_per_t = {t: 0 for t in thresholds}
         rows, cols, ch = img.shape
-        for rs in range(0, rows, self.block_rows):
+        # Speed optimization: Sample every 4th block for huge images (>16k)
+        step = 4 if rows > 16384 else 1
+        
+        for rs in range(0, rows, self.block_rows * step):
             re = min(rs + self.block_rows, rows)
             block = img[rs:re]
             for c in range(ch):
@@ -18,6 +21,11 @@ class AdaptiveLSBCore:
                 for t in thresholds:
                     mask = score >= t
                     bits_per_t[t] += np.sum(np.where(score[mask] >= 70, 2, 1))
+        
+        # Scale back up if we sampled
+        if step > 1:
+            for t in thresholds: bits_per_t[t] *= step
+
         if forbidden_indices:
             for t in thresholds: bits_per_t[t] -= len(forbidden_indices)
         for t in thresholds:
@@ -27,14 +35,15 @@ class AdaptiveLSBCore:
     def calculate_capacity(self, img, threshold=35):
         rows, cols, ch = img.shape
         total = 0
-        for rs in range(0, rows, self.block_rows):
+        step = 4 if rows > 16384 else 1
+        for rs in range(0, rows, self.block_rows * step):
             re = min(rs + self.block_rows, rows)
             block = img[rs:re]
             for c in range(ch):
                 score = self.masker.get_score_block(block, c).ravel()
                 mask = score >= threshold
                 total += np.sum(np.where(score[mask] >= 70, 2, 1))
-        return int(total)
+        return int(total * step)
 
     def _get_shuffled_indices(self, size, seed):
         """Standardized LCG-based shuffle for absolute symmetry."""
