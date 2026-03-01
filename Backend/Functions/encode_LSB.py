@@ -10,36 +10,20 @@ from .utils import get_seed_from_password
 
 HEADER_BITS = 32
 
-def _header_positions(flat_size, seed):
-    """Deterministic header positioning using a simple LCG."""
-    pos, curr = set(), seed
-    a, c, m = 1664525, 1013904223, 2**32
-    search_space = min(flat_size, 1000000)
-    
-    while len(pos) < HEADER_BITS:
-        curr = (a * curr + c) % m
-        pos.add(curr % search_space)
-            
-    res = list(pos)
-    res.sort()
-    return np.array(res, dtype=np.int64)
-
 def encode_LSB(image_path, plaintext, password, output_path):
-    """Full-cycle encoding: AES -> ECC -> Adaptive LSB."""
+    """Full-cycle encoding with Fixed Header placement for absolute integrity."""
     temp_bmp = None
     try:
         cipher = SecureAESCipher(password)
         protected_bytes = HammingCode().encode(cipher.encrypt(plaintext))
         payload_bit_length = len(protected_bytes) * 8
 
-        # ── FORMAT HANDLING ──
         with Image.open(image_path) as img:
             width, height = img.size
             is_huge = (width * height) > (16384 * 16384)
             output_ext = ".bmp" if is_huge else ".png"
             output_path = os.path.splitext(output_path)[0] + output_ext
 
-            # Create raw temporary BMP
             fd, temp_bmp = tempfile.mkstemp(suffix='.bmp')
             os.close(fd)
             streamer = BmpStreamer(temp_bmp)
@@ -49,24 +33,20 @@ def encode_LSB(image_path, plaintext, password, output_path):
             with streamer.open(mode='r+') as img_array:
                 for y in range(0, height, chunk_rows):
                     end_y = min(y + chunk_rows, height)
-                    region = img.crop((0, y, width, end_y)).convert("RGB")
-                    img_array[y:end_y] = np.array(region, dtype=np.uint8)
+                    img_array[y:end_y] = np.array(img.crop((0, y, width, end_y)).convert("RGB"), dtype=np.uint8)
                 img_array.flush()
 
         # ── EMBEDDING ──
         streamer = BmpStreamer(temp_bmp)
         with streamer.open(mode='r+') as img_array:
-            rows, cols, ch = img_array.shape
+            # 1. Fixed Header (First 32 pixels of channel 0 - Red)
             h_bits = np.unpackbits(np.array([payload_bit_length], dtype=">u4").view(np.uint8))
-            h_pos = _header_positions(img_array.size, get_seed_from_password(password))
-            
-            # Robust 3D Header Placement
             for i in range(HEADER_BITS):
-                p = h_pos[i]
-                r, cl, cn = (p // ch) // cols, (p // ch) % cols, p % ch
-                img_array[r, cl, cn] = (img_array[r, cl, cn] & 0xFE) | h_bits[i]
+                # Using first 32 pixels of row 0
+                img_array[0, i, 0] = (img_array[0, i, 0] & 0xFE) | h_bits[i]
             
-            AdaptiveLSBCore(password=password).encode(img_array, protected_bytes, forbidden_indices=set(h_pos))
+            # 2. Adaptive Data (Skipping the header zone)
+            AdaptiveLSBCore(password=password).encode(img_array, protected_bytes, forbidden_indices=set(range(HEADER_BITS)))
             img_array.flush()
 
         # ── FINALIZATION ──

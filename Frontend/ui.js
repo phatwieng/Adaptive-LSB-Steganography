@@ -210,7 +210,7 @@ class UIManager {
         const ctx = document.getElementById('histogram-charts');
         if (!ctx) return;
         
-        ctx.innerHTML = '<h2>Spectral Histogram Analysis</h2><div id="hist-container" style="display:flex; flex-direction:column; gap:20px;"></div>';
+        ctx.innerHTML = '<h2>Spectral Histogram Analysis</h2><div id="hist-container" style="display:flex; flex-direction:column; gap:25px;"></div>';
         const container = document.getElementById('hist-container');
         
         const channels = [
@@ -222,8 +222,10 @@ class UIManager {
         channels.forEach(ch => {
             const chartDiv = document.createElement('div');
             chartDiv.className = 'chart-container';
-            chartDiv.style.height = '240px'; 
-            chartDiv.innerHTML = `<h4 style="margin-bottom:15px; color:#ddd; font-size:0.8rem; letter-spacing:0.1em; text-align:center;">${ch.name.toUpperCase()} (Intensity Distribution)</h4><canvas id="hist-${ch.id}"></canvas>`;
+            // Custom frame with yellow left border for each chart
+            chartDiv.style.borderLeft = '4px solid var(--yellow)';
+            chartDiv.style.height = '300px'; 
+            chartDiv.innerHTML = `<h4 style="margin-bottom:10px; color:#ddd; font-size:0.85rem; letter-spacing:0.1em;">${ch.name.toUpperCase()}</h4><canvas id="hist-${ch.id}"></canvas>`;
             container.appendChild(chartDiv);
 
             const config = {
@@ -231,24 +233,25 @@ class UIManager {
                 data: {
                     labels: Array.from({length: 256}, (_, i) => i),
                     datasets: [
-                        { label: 'Original', data: a.histogram_original[ch.id], borderColor: '#444', borderWidth: 1, fill: false, pointRadius: 0 },
+                        { label: 'Original', data: a.histogram_original[ch.id], borderColor: '#222', borderWidth: 1, fill: false, pointRadius: 0 },
                         { label: 'Stego', data: a.histogram_stego[ch.id], borderColor: ch.color, borderWidth: 1.5, fill: false, pointRadius: 0 }
                     ]
                 },
                 options: { 
                     responsive: true, 
                     maintainAspectRatio: false,
+                    layout: { padding: { left: 10, right: 10, top: 0, bottom: 0 } },
                     scales: { 
                         y: { 
                             display: true, 
-                            title: { display: true, text: 'Pixel Count', color: '#666', font: { size: 10 } },
-                            grid: { color: 'rgba(255,255,255,0.05)', borderDash: [2, 2] },
+                            title: { display: true, text: 'PIXEL DENSITY', color: '#555', font: { size: 9, weight: 'bold' }, padding: -20 },
+                            grid: { color: 'rgba(255,255,255,0.12)', lineWidth: 1 },
                             ticks: { color: '#444', font: { size: 8 } } 
                         },
                         x: { 
                             display: true,
-                            title: { display: true, text: 'Color Value (0-255)', color: '#666', font: { size: 10 } },
-                            grid: { color: 'rgba(255,255,255,0.05)' }, 
+                            title: { display: true, text: 'INTENSITY (0-255)', color: '#555', font: { size: 9, weight: 'bold' }, padding: -15 },
+                            grid: { color: 'rgba(255,255,255,0.12)', lineWidth: 1 }, 
                             ticks: { color: '#666', font: { size: 9 } } 
                         }
                     }, 
@@ -257,7 +260,7 @@ class UIManager {
                             display: true, 
                             position: 'top', 
                             align: 'end',
-                            labels: { color: '#aaa', font: { size: 9 }, boxWidth: 12 } 
+                            labels: { color: '#888', font: { size: 10 }, boxWidth: 10, usePointStyle: true } 
                         } 
                     } 
                 }
