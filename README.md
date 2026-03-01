@@ -1,4 +1,13 @@
-<<<<<<< HEAD
+---
+title: Adaptive LSB Steganography
+emoji: 🛡️
+colorFrom: yellow
+colorTo: black
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # ── Steganography Suite ──
 
 A High-Security Adaptive Steganography Suite designed for professional-grade data concealment within images. Optimized for **gigapixel processing (up to 32k x 32k)** with absolute data integrity.
@@ -41,7 +50,3 @@ This project is container-ready. Use the provided `Dockerfile` for deployment to
 
 ---
 *Developed for high-resolution security research.*
-=======
-# Adaptive-LSB-Steganography
-Finalized ig
->>>>>>> 5b60fed77cbbb0686ff746ea189c7a522eda6829
