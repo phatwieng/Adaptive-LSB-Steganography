@@ -12,6 +12,7 @@ from Analyze.image_analyzer import comprehensive_analysis
 
 # ── CONFIGURATION ──
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(BASE_DIR)
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
@@ -61,14 +62,14 @@ def sanitize_data(data):
 @app.route("/")
 def index():
     for f in ["dist", "Frontend"]:
-        p = os.path.join(BASE_DIR, f, "index.html")
+        p = os.path.join(PROJECT_ROOT, f, "index.html")
         if os.path.exists(p): return send_file(p)
     return jsonify({"error": "Frontend not found"}), 404
 
 @app.route("/<path:path>")
 def serve_static(path):
     for f in ["dist", "Frontend"]:
-        d = os.path.join(BASE_DIR, f)
+        d = os.path.join(PROJECT_ROOT, f)
         if os.path.exists(os.path.join(d, path)): return send_from_directory(d, path)
     return jsonify({"error": "File not found"}), 404
 
