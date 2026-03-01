@@ -91,7 +91,7 @@ def upload_chunk():
             with open(out_path, "wb") as f:
                 for i in range(total):
                     cp = os.path.join(tdir, f"chunk_{i}")
-                    with open(cp, "rb") as cf: f.write(cp.read())
+                    with open(cp, "rb") as cf: f.write(cf.read())
                     os.remove(cp)
             os.rmdir(tdir)
             upload_sessions[sid] = {"path": out_path, "filename": fname}
