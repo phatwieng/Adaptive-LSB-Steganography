@@ -19,7 +19,8 @@ class BmpStreamer:
         stride = ((w * 3 + 3) // 4) * 4
         size = 54 + (stride * abs(h))
         with open(self.filepath, 'wb') as f:
-            f.write(struct.pack('<ccIHHiIIiiHHIIIIII', b'B', b'M', size, 0, 0, 54, 40, w, h, 1, 24, 0, size-54, 2835, 2835, 0, 0))
+            # Format: 2c(BM), I(size), 2H(res), I(off), I(hdr), 2i(w,h), H(planes), H(bit), I(comp), I(img_sz), 2i(res), 2I(clr)
+            f.write(struct.pack('<ccIHHiIIiiHHIIiiII', b'B', b'M', size, 0, 0, 54, 40, w, h, 1, 24, 0, size-54, 2835, 2835, 0, 0))
             f.seek(size - 1); f.write(b'\0')
 
     @contextmanager
