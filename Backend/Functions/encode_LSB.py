@@ -22,7 +22,9 @@ def encode_LSB(image_path, plaintext, password, output_path):
         with Image.open(image_path) as img:
             width, height = img.size
             is_huge = (width * height) > (16384 * 16384)
-            output_ext = ".bmp" if is_huge else ".png"
+            # If user provided .bmp extension, respect it even if not huge
+            provided_ext = os.path.splitext(output_path)[1].lower()
+            output_ext = provided_ext if provided_ext in ['.bmp', '.png'] else (".bmp" if is_huge else ".png")
             output_path = os.path.splitext(output_path)[0] + output_ext
 
             fd, temp_bmp = tempfile.mkstemp(suffix='.bmp')
